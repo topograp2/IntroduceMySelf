@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나를 맞혀봐!</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game-shell">
+    <section class="quiz-card" aria-live="polite">
+      <div class="top-bar">
+        <span class="badge">QUIZ GAME</span>
+        <span id="progressText" class="progress-text">1 / 4</span>
+      </div>
+
+      <h1>나를 맞혀봐!</h1>
+
+      <div class="score-board">
+        <div>
+          <span class="label">현재 점수</span>
+          <strong id="scoreText">0</strong>
+        </div>
+        <div>
+          <span class="label">남은 문제</span>
+          <strong id="leftText">4</strong>
+        </div>
+      </div>
+
+      <div id="questionArea" class="question-area">
+        <p id="questionText" class="question-text"></p>
+        <div id="choices" class="choices"></div>
+      </div>
+
+      <div id="resultArea" class="result-area hidden">
+        <p class="result-kicker">게임 결과</p>
+        <p id="resultScore" class="result-score"></p>
+        <p id="resultMessage" class="result-message"></p>
+        <button id="restartButton" class="next-button" type="button">다시 도전하기</button>
+      </div>
+
+      <button id="nextButton" class="next-button" type="button" disabled>다음 문제</button>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
