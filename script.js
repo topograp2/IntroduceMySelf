@@ -23,26 +23,6 @@ const quizData = [
 
 const memorySymbols = ["🍀", "🍜", "👩‍💻", "👩‍🏫"];
 
-const questionNumber = document.getElementById("questionNumber");
-const questionText = document.getElementById("questionText");
-const choicesContainer = document.getElementById("choices");
-const nextButton = document.getElementById("nextButton");
-const progressText = document.getElementById("progressText");
-const quizScreen = document.getElementById("quizScreen");
-const resultScreen = document.getElementById("resultScreen");
-const scoreText = document.getElementById("scoreText");
-const scoreMessage = document.getElementById("scoreMessage");
-const restartQuizButton = document.getElementById("restartQuizButton");
-const feedbackModal = document.getElementById("feedbackModal");
-const modalIcon = document.getElementById("modalIcon");
-const modalTitle = document.getElementById("modalTitle");
-const modalText = document.getElementById("modalText");
-const closeModalButton = document.getElementById("closeModalButton");
-const memoryGrid = document.getElementById("memoryGrid");
-const memoryMoves = document.getElementById("memoryMoves");
-const memoryStatus = document.getElementById("memoryStatus");
-const restartMemoryButton = document.getElementById("restartMemoryButton");
-
 let currentQuestionIndex = 0;
 let selectedChoice = null;
 let score = 0;
@@ -54,7 +34,50 @@ let matchedPairs = 0;
 let moveCount = 0;
 let memoryDeck = [];
 
-function renderQuestion() {
+function getRequiredElements() {
+  const elements = {
+    questionNumber: document.getElementById("questionNumber"),
+    questionText: document.getElementById("questionText"),
+    choicesContainer: document.getElementById("choices"),
+    nextButton: document.getElementById("nextButton"),
+    progressText: document.getElementById("progressText"),
+    quizScreen: document.getElementById("quizScreen"),
+    resultScreen: document.getElementById("resultScreen"),
+    scoreText: document.getElementById("scoreText"),
+    scoreMessage: document.getElementById("scoreMessage"),
+    restartQuizButton: document.getElementById("restartQuizButton"),
+    feedbackModal: document.getElementById("feedbackModal"),
+    modalIcon: document.getElementById("modalIcon"),
+    modalTitle: document.getElementById("modalTitle"),
+    modalText: document.getElementById("modalText"),
+    closeModalButton: document.getElementById("closeModalButton"),
+    memoryGrid: document.getElementById("memoryGrid"),
+    memoryMoves: document.getElementById("memoryMoves"),
+    memoryStatus: document.getElementById("memoryStatus"),
+    restartMemoryButton: document.getElementById("restartMemoryButton"),
+  };
+
+  const missing = Object.entries(elements)
+    .filter(([, element]) => !element)
+    .map(([name]) => name);
+
+  if (missing.length > 0) {
+    console.error("Missing required elements:", missing.join(", "));
+    return null;
+  }
+
+  return elements;
+}
+
+function renderQuestion(elements) {
+  const {
+    questionNumber,
+    questionText,
+    choicesContainer,
+    nextButton,
+    progressText,
+    quizScreen,
+  } = elements;
   const current = quizData[currentQuestionIndex];
   questionNumber.textContent = `QUESTION ${currentQuestionIndex + 1}`;
   questionText.textContent = current.question;
@@ -93,7 +116,8 @@ function handleChoiceSelect(button, choice) {
   nextButton.disabled = false;
 }
 
-function showModal(isCorrect, correctAnswer) {
+function showModal(elements, isCorrect, correctAnswer) {
+  const { modalIcon, modalTitle, modalText, feedbackModal } = elements;
   modalIcon.textContent = isCorrect ? "O" : "X";
   modalIcon.className = `modal-icon ${isCorrect ? "success" : "fail"}`;
   modalTitle.textContent = isCorrect ? "정답!" : "아쉬워요!";
@@ -104,7 +128,8 @@ function showModal(isCorrect, correctAnswer) {
   feedbackModal.setAttribute("aria-hidden", "false");
 }
 
-function closeModal() {
+function closeModal(elements) {
+  const { feedbackModal } = elements;
   feedbackModal.classList.add("hidden");
   feedbackModal.setAttribute("aria-hidden", "true");
 
@@ -114,13 +139,13 @@ function closeModal() {
 
   if (currentQuestionIndex < quizData.length - 1) {
     currentQuestionIndex += 1;
-    renderQuestion();
+    renderQuestion(elements);
   } else {
-    showResult();
+    showResult(elements);
   }
 }
 
-function handleNextQuestion() {
+function handleNextQuestion(elements) {
   if (!selectedChoice || answerLocked) {
     return;
   }
@@ -142,10 +167,11 @@ function handleNextQuestion() {
     button.disabled = true;
   });
 
-  showModal(isCorrect, current.answer);
+  showModal(elements, isCorrect, current.answer);
 }
 
-function showResult() {
+function showResult(elements) {
+  const { quizScreen, resultScreen, progressText, scoreText, scoreMessage } = elements;
   quizScreen.classList.add("hidden");
   resultScreen.classList.remove("hidden");
   progressText.textContent = "완료";
@@ -160,7 +186,8 @@ function showResult() {
   }
 }
 
-function restartQuiz() {
+function restartQuiz(elements) {
+  const { resultScreen, quizScreen } = elements;
   currentQuestionIndex = 0;
   score = 0;
   selectedChoice = null;
@@ -168,7 +195,7 @@ function restartQuiz() {
   pendingAdvance = false;
   resultScreen.classList.add("hidden");
   quizScreen.classList.remove("hidden");
-  renderQuestion();
+  renderQuestion(elements);
 }
 
 function shuffle(array) {
@@ -189,7 +216,8 @@ function createMemoryDeck() {
   }));
 }
 
-function renderMemoryGame() {
+function renderMemoryGame(elements) {
+  const { memoryGrid, memoryMoves } = elements;
   memoryGrid.innerHTML = "";
 
   memoryDeck.forEach((card) => {
@@ -210,14 +238,15 @@ function renderMemoryGame() {
       button.disabled = true;
     }
 
-    button.addEventListener("click", () => handleMemoryFlip(card.id));
+    button.addEventListener("click", () => handleMemoryFlip(elements, card.id));
     memoryGrid.appendChild(button);
   });
 
   memoryMoves.textContent = `이동 ${moveCount}회`;
 }
 
-function handleMemoryFlip(cardId) {
+function handleMemoryFlip(elements, cardId) {
+  const { memoryMoves, memoryStatus } = elements;
   if (flippedCards.length === 2) {
     return;
   }
@@ -229,7 +258,7 @@ function handleMemoryFlip(cardId) {
 
   card.flipped = true;
   flippedCards.push(card);
-  renderMemoryGame();
+  renderMemoryGame(elements);
 
   if (flippedCards.length === 2) {
     moveCount += 1;
@@ -246,7 +275,7 @@ function handleMemoryFlip(cardId) {
       if (matchedPairs === memorySymbols.length) {
         memoryStatus.textContent = `축하해요! ${moveCount}번 만에 모든 카드를 맞혔어요.`;
       }
-      renderMemoryGame();
+      renderMemoryGame(elements);
       return;
     }
 
@@ -255,30 +284,52 @@ function handleMemoryFlip(cardId) {
       firstCard.flipped = false;
       secondCard.flipped = false;
       flippedCards = [];
-      renderMemoryGame();
+      renderMemoryGame(elements);
       memoryStatus.textContent = "카드를 뒤집어 다음 짝을 찾아보세요!";
     }, 800);
   }
 }
 
-function restartMemoryGame() {
+function restartMemoryGame(elements) {
+  const { memoryStatus } = elements;
   memoryDeck = createMemoryDeck();
   flippedCards = [];
   matchedPairs = 0;
   moveCount = 0;
   memoryStatus.textContent = "카드를 뒤집어 시작해보세요!";
-  renderMemoryGame();
+  renderMemoryGame(elements);
 }
 
-nextButton.addEventListener("click", handleNextQuestion);
-restartQuizButton.addEventListener("click", restartQuiz);
-closeModalButton.addEventListener("click", closeModal);
-restartMemoryButton.addEventListener("click", restartMemoryGame);
-feedbackModal.addEventListener("click", (event) => {
-  if (event.target === feedbackModal) {
-    closeModal();
+function init() {
+  const elements = getRequiredElements();
+  if (!elements) {
+    return;
   }
-});
 
-renderQuestion();
-restartMemoryGame();
+  const {
+    nextButton,
+    restartQuizButton,
+    closeModalButton,
+    restartMemoryButton,
+    feedbackModal,
+  } = elements;
+
+  nextButton.addEventListener("click", () => handleNextQuestion(elements));
+  restartQuizButton.addEventListener("click", () => restartQuiz(elements));
+  closeModalButton.addEventListener("click", () => closeModal(elements));
+  restartMemoryButton.addEventListener("click", () => restartMemoryGame(elements));
+  feedbackModal.addEventListener("click", (event) => {
+    if (event.target === feedbackModal) {
+      closeModal(elements);
+    }
+  });
+
+  renderQuestion(elements);
+  restartMemoryGame(elements);
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
